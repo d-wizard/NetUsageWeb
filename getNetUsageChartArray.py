@@ -15,9 +15,17 @@ NET_USAGE_LOG_PATH = os.path.join(THIS_SCRIPT_DIR, 'netUsage.log')
 NET_USAGE_LOCK_PATH = os.path.join(THIS_SCRIPT_DIR, 'netUsage.lock')
 
 LOG_NEW_LINE = "\n"
-LOG_MAX_TIME = 60*60*24*30 # 1 Month
-LOG_MAX_TIME_TIME_TO_LEAVE_AFTER_TRIM = 60*60*24*14 # 2 Weeks
-TIME_BETWEEN_LOG_UPDATES = 30 # 30 seconds should be enough resolution
+LOG_MAX_TIME = 60*60*24*30*4 # 4 Months
+LOG_MAX_TIME_TIME_TO_LEAVE_AFTER_TRIM = 60*60*24*30*2 # 2 Months
+TIME_BETWEEN_LOG_UPDATES = 30
+
+class NetStatTimePoint(object):
+   def __init__(self):
+      # Time (sec), Raw Usage Value (bytes), Usage Delta (bytes), Total Usage Since Beginning Of Time (bytes)
+      self.time = None 
+      self.rawUsage = None
+      self.deltaUsage = None
+      self.totalUsage = None
 
 
 def readWholeFile(path):
@@ -45,6 +53,13 @@ def writeWholeFile(path, fileText):
       fileId.close()
    except:
       pass
+
+def readWholeFile_lines(path):
+   lines = readWholeFile(path).split(LOG_NEW_LINE)
+   # remove empty line at end.
+   if lines[-1] == "":
+      lines = lines[:-1]
+   return lines
 
 def lockFile(fileToLock):
    fd = open(fileToLock, 'w')
@@ -151,38 +166,61 @@ def getPrintStr(lines):
        retStr = retStr[:-1]
    return retStr
 
+def getNetUsagePoint(logLines, lineNum):
+   retVal = NetStatTimePoint()
+   try:
+      splitLine = logLines[lineNum].split(',')
+      retVal.time       = int(splitLine[0])
+      retVal.rawUsage   = int(splitLine[1])
+      retVal.deltaUsage = int(splitLine[2])
+      retVal.totalUsage = int(splitLine[3])
+   except:
+      print("getNetUsagePoint - Failed to parse line: " + str(lineNum))
+      return None
+   return retVal
 
-def updateNetUsageLogFile(netUsage, switchState, timeOfLastTempWrite):
+def updateNetUsageLogFile(netUsage):
    nowUnixTime = getNowTimeUnix()
 
-   if (nowUnixTime - timeOfLastTempWrite) >= TIME_BETWEEN_LOG_UPDATES:
-      timeOfLastTempWrite = nowUnixTime
+   lockFd = lockFile(NET_USAGE_LOCK_PATH)
 
-      switchStatePrint = "1" if (switchState != None and switchState == True) else "0"
-      logPrint = str(int(nowUnixTime)) + ",{:.1f}".format(netUsage) + "," + switchStatePrint + LOG_NEW_LINE
+   newUsagePoint = NetStatTimePoint()
+   newUsagePoint.time = nowUnixTime
+   newUsagePoint.rawUsage = netUsage
 
-      lockFd = lockFile(NET_USAGE_LOCK_PATH)
-      appendFile(NET_USAGE_LOG_PATH, logPrint)
+   logLines = readWholeFile_lines(NET_USAGE_LOG_PATH)
 
-      # Limit the log from getting too big
-      try:
-         logLines = readWholeFile(NET_USAGE_LOG_PATH).split(LOG_NEW_LINE)
-         # remove empty line at end.
-         if logLines[-1] == "":
-            logLines = logLines[:-1]
+   lastUsagePoint = getNetUsagePoint(logLines, -1)
+   if lastUsagePoint != None:
+      newUsagePoint.deltaUsage = newUsagePoint.rawUsage - lastUsagePoint.rawUsage
+      if newUsagePoint.deltaUsage < 0:
+         newUsagePoint.deltaUsage = newUsagePoint.rawUsage # The router must have reset its count. Some usage info will have been lost. 
+      newUsagePoint.totalUsage = lastUsagePoint.totalUsage + newUsagePoint.deltaUsage
+   else:
+      # Start the log file
+      newUsagePoint.deltaUsage = 0
+      newUsagePoint.totalUsage = newUsagePoint.deltaUsage
 
-         oldestTime = lineToTime(logLines[0])
-         if (nowUnixTime - oldestTime) > LOG_MAX_TIME:
-            indexToKeep = findTimeIndex(logLines, nowUnixTime - LOG_MAX_TIME_TIME_TO_LEAVE_AFTER_TRIM)
-            logLines = logLines[indexToKeep:]
-            writeWholeFile(NET_USAGE_LOG_PATH, LOG_NEW_LINE.join(logLines)+LOG_NEW_LINE)
-      except:
-         pass
+   # Log message format will be Time (sec), Raw Usage Value (bytes), Usage Delta (bytes), Total Usage Since Beginning Of Time (bytes)
+   logPrint = str(newUsagePoint.time) + "," + str(newUsagePoint.rawUsage) + "," + str(newUsagePoint.deltaUsage) + "," + str(newUsagePoint.totalUsage) + LOG_NEW_LINE
+   appendFile(NET_USAGE_LOG_PATH, logPrint)
 
-      unlockFile(lockFd)
+   # Limit the log from getting too big
+   try:
+      logLines = readWholeFile_lines(NET_USAGE_LOG_PATH)
+      # remove empty line at end.
+      if logLines[-1] == "":
+         logLines = logLines[:-1]
 
-   return timeOfLastTempWrite
+      oldestTime = lineToTime(logLines[0])
+      if (nowUnixTime - oldestTime) > LOG_MAX_TIME:
+         indexToKeep = findTimeIndex(logLines, nowUnixTime - LOG_MAX_TIME_TIME_TO_LEAVE_AFTER_TRIM)
+         logLines = logLines[indexToKeep:]
+         writeWholeFile(NET_USAGE_LOG_PATH, LOG_NEW_LINE.join(logLines)+LOG_NEW_LINE)
+   except:
+      pass
 
+   unlockFile(lockFd)
 
 
 # Main start
