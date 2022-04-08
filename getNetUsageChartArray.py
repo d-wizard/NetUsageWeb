@@ -11,8 +11,8 @@ import fcntl
 ################################################################################
 THIS_SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 THIS_SCRIPT_FILENAME_NO_EXT = os.path.splitext(os.path.realpath(__file__))[0] 
-TEMPERATURE_LOG_PATH = os.path.join(THIS_SCRIPT_DIR, 'temperature.log')
-TEMPERATURE_LOCK_PATH = os.path.join(THIS_SCRIPT_DIR, 'temperature.lock')
+NET_USAGE_LOG_PATH = os.path.join(THIS_SCRIPT_DIR, 'netUsage.log')
+NET_USAGE_LOCK_PATH = os.path.join(THIS_SCRIPT_DIR, 'netUsage.lock')
 
 LOG_NEW_LINE = "\n"
 LOG_MAX_TIME = 60*60*24*30 # 1 Month
@@ -135,10 +135,10 @@ def getPrintStr(lines):
    retStr = ''
    for line in lines:
       try:
-         [unixTime, temperature, switchState] = line.split(",")
+         [unixTime, netUsage, switchState] = line.split(",")
 
-         # Don't have the .0 if the temperature value is a whole number (i.e. save 2 bytes)
-         tempFlt = float(temperature)
+         # Don't have the .0 if the netUsage value is a whole number (i.e. save 2 bytes)
+         tempFlt = float(netUsage)
          tempInt = int(tempFlt)
          tempStr = str(tempInt) if tempInt == tempFlt else str(tempFlt)
 
@@ -152,21 +152,21 @@ def getPrintStr(lines):
    return retStr
 
 
-def updateTemperatureLogFile(temperature, switchState, timeOfLastTempWrite):
+def updateNetUsageLogFile(netUsage, switchState, timeOfLastTempWrite):
    nowUnixTime = getNowTimeUnix()
 
    if (nowUnixTime - timeOfLastTempWrite) >= TIME_BETWEEN_LOG_UPDATES:
       timeOfLastTempWrite = nowUnixTime
 
       switchStatePrint = "1" if (switchState != None and switchState == True) else "0"
-      logPrint = str(int(nowUnixTime)) + ",{:.1f}".format(temperature) + "," + switchStatePrint + LOG_NEW_LINE
+      logPrint = str(int(nowUnixTime)) + ",{:.1f}".format(netUsage) + "," + switchStatePrint + LOG_NEW_LINE
 
-      lockFd = lockFile(TEMPERATURE_LOCK_PATH)
-      appendFile(TEMPERATURE_LOG_PATH, logPrint)
+      lockFd = lockFile(NET_USAGE_LOCK_PATH)
+      appendFile(NET_USAGE_LOG_PATH, logPrint)
 
       # Limit the log from getting too big
       try:
-         logLines = readWholeFile(TEMPERATURE_LOG_PATH).split(LOG_NEW_LINE)
+         logLines = readWholeFile(NET_USAGE_LOG_PATH).split(LOG_NEW_LINE)
          # remove empty line at end.
          if logLines[-1] == "":
             logLines = logLines[:-1]
@@ -175,7 +175,7 @@ def updateTemperatureLogFile(temperature, switchState, timeOfLastTempWrite):
          if (nowUnixTime - oldestTime) > LOG_MAX_TIME:
             indexToKeep = findTimeIndex(logLines, nowUnixTime - LOG_MAX_TIME_TIME_TO_LEAVE_AFTER_TRIM)
             logLines = logLines[indexToKeep:]
-            writeWholeFile(TEMPERATURE_LOG_PATH, LOG_NEW_LINE.join(logLines)+LOG_NEW_LINE)
+            writeWholeFile(NET_USAGE_LOG_PATH, LOG_NEW_LINE.join(logLines)+LOG_NEW_LINE)
       except:
          pass
 
@@ -193,12 +193,12 @@ if __name__== "__main__":
    parser.add_argument("-n", type=int, action="store", dest="numPoints", help="Num Points", default=100)
    args = parser.parse_args()
 
-   # Process the Temperature Log File
-   lockFd = lockFile(TEMPERATURE_LOCK_PATH)
-   temperatureLogFile = readWholeFile(TEMPERATURE_LOG_PATH)
+   # Process the Net Usage Log File
+   lockFd = lockFile(NET_USAGE_LOCK_PATH)
+   netUsageLogFile = readWholeFile(NET_USAGE_LOG_PATH)
    unlockFile(lockFd)
 
-   lines = temperatureLogFile.split(LOG_NEW_LINE)
+   lines = netUsageLogFile.split(LOG_NEW_LINE)
 
    # remove empty line at end.
    if lines[-1] == "":
