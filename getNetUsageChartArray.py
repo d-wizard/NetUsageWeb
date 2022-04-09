@@ -4,13 +4,15 @@ import math
 from datetime import datetime
 import argparse
 import fcntl
-
+import subprocess
+import json
 
 ################################################################################
 # Constant Variables
 ################################################################################
 THIS_SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 THIS_SCRIPT_FILENAME_NO_EXT = os.path.splitext(os.path.realpath(__file__))[0] 
+JSON_PATH = THIS_SCRIPT_FILENAME_NO_EXT + '.json'
 NET_USAGE_LOG_PATH = os.path.join(THIS_SCRIPT_DIR, 'netUsage.log')
 NET_USAGE_LOCK_PATH = os.path.join(THIS_SCRIPT_DIR, 'netUsage.lock')
 
@@ -28,6 +30,9 @@ class NetStatTimePoint(object):
       self.totalUsage = None
 
 
+################################################################################
+# Helper Functions
+################################################################################
 def readWholeFile(path):
    retVal = ""
    try:
@@ -69,6 +74,16 @@ def lockFile(fileToLock):
 def unlockFile(fd):
    fcntl.lockf(fd, fcntl.LOCK_UN )
 
+def runProcess(exe):
+   retVal = []  
+   p = subprocess.Popen(exe.split(' '), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+   while(True):
+      retcode = p.poll() #returns None while subprocess is running
+      line = p.stdout.readline()
+      retVal.append(line)
+      if(retcode is not None):
+         break
+   return retVal
 
 
 def timeToPrintStr(unixTime):
@@ -222,6 +237,21 @@ def updateNetUsageLogFile(netUsage):
 
    unlockFile(lockFd)
 
+def getNetUsage():
+   # Read the JSON contents of this file every time it is used.
+   try:
+      THIS_FILE_JSON = json.loads(readWholeFile(JSON_PATH))
+
+      cmd = THIS_FILE_JSON["NetUsageCmd"]
+      cmdResults = runProcess(cmd)
+
+      for line in cmdResults:
+         if THIS_FILE_JSON["NetUsageStartKeyWord"] in line:
+            subStr = line.split(THIS_FILE_JSON["NetUsageStartKeyWord"])[1].split(THIS_FILE_JSON["NetUsageEndKeyWord"])[0]
+            return int(subStr)
+   except:
+      pass
+   return None
 
 # Main start
 if __name__== "__main__":
