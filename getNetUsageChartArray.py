@@ -113,6 +113,19 @@ def getNowTimeUnix():
 def lineToTime(line):
    return int(line.split(",")[0])
 
+def getNetUsagePoint(logLines, lineNum):
+   retVal = NetStatTimePoint()
+   try:
+      splitLine = logLines[lineNum].split(',')
+      retVal.time       = int(splitLine[0])
+      retVal.rawUsage   = int(splitLine[1])
+      retVal.deltaUsage = int(splitLine[2])
+      retVal.totalUsage = int(splitLine[3])
+   except:
+      print("getNetUsagePoint - Failed to parse line: " + str(lineNum))
+      return None
+   return retVal
+
 def findTimeIndex(lines, timeLimit):
    numLines = len(lines)
    # First test for some error values.
@@ -161,18 +174,22 @@ def getLinesToChart(lines, numLinesToChart):
 
    return retVal
 
-def getPrintStr(lines):
+def getPrintStr_usage(lines):
    retStr = ''
-   for line in lines:
+
+   startUsage = 0
+   for lineIndex in range(len(lines)):
       try:
-         [unixTime, netUsage, switchState] = line.split(",")
+         point = getNetUsagePoint(lines, lineIndex)
+         if lineIndex == 0: # set startUsage on first point
+            startUsage = point.totalUsage
 
          # Don't have the .0 if the netUsage value is a whole number (i.e. save 2 bytes)
-         tempFlt = float(netUsage)
+         tempFlt = float(point.totalUsage - startUsage)
          tempInt = int(tempFlt)
          tempStr = str(tempInt) if tempInt == tempFlt else str(tempFlt)
 
-         appendStr = '["Date(' + timeToPrintStr(unixTime) + ')",' + str(int(switchState)) + ',' + tempStr + '],'
+         appendStr = '["Date(' + timeToPrintStr(point.time) + ')",' + tempStr + '],'
          retStr += appendStr
       except:
          pass
@@ -180,19 +197,6 @@ def getPrintStr(lines):
    if retStr[-1] == ',':
        retStr = retStr[:-1]
    return retStr
-
-def getNetUsagePoint(logLines, lineNum):
-   retVal = NetStatTimePoint()
-   try:
-      splitLine = logLines[lineNum].split(',')
-      retVal.time       = int(splitLine[0])
-      retVal.rawUsage   = int(splitLine[1])
-      retVal.deltaUsage = int(splitLine[2])
-      retVal.totalUsage = int(splitLine[3])
-   except:
-      print("getNetUsagePoint - Failed to parse line: " + str(lineNum))
-      return None
-   return retVal
 
 def updateNetUsageLogFile(netUsage):
    nowUnixTime = getNowTimeUnix()
@@ -223,9 +227,6 @@ def updateNetUsageLogFile(netUsage):
    # Limit the log from getting too big
    try:
       logLines = readWholeFile_lines(NET_USAGE_LOG_PATH)
-      # remove empty line at end.
-      if logLines[-1] == "":
-         logLines = logLines[:-1]
 
       oldestTime = lineToTime(logLines[0])
       if (nowUnixTime - oldestTime) > LOG_MAX_TIME:
@@ -280,4 +281,4 @@ if __name__== "__main__":
 
       lines = getLinesToChart(lines, args.numPoints)
       
-      print getPrintStr(lines)
+      print(getPrintStr_usage(lines))
