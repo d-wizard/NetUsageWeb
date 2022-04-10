@@ -11,7 +11,7 @@
         /////////////////////////////////////////////////////////        
         $pythonScript = "python /home/pi/NetUsageWeb/getNetUsageChartArray.py"; // TODO this path to the python script shouldn't be hardcoded.
         $plotTypeCmd = " -r";
-        $titleStr = "Network Usage Rate - 1 Day";
+        $titleStr = "TX Usage Rate - 1 Day";
 
         $time = 3600*24;
         $numPoints = 600;
@@ -20,61 +20,61 @@
         {
           $time = 60;
           $numPoints = 100;
-          $titleStr = "Network Usage Rate - 1 Min";
+          $titleStr = "TX Usage Rate - 1 Min";
         }
         if(isset($_GET["submit_5min"]))
         {
           $time = 5*60;
           $numPoints = 100;
-          $titleStr = "Network Usage Rate - 5 Min";
+          $titleStr = "TX Usage Rate - 5 Min";
         }
         if(isset($_GET["submit_15min"]))
         {
           $time = 15*60;
           $numPoints = 100;
-          $titleStr = "Network Usage Rate - 15 Min";
+          $titleStr = "TX Usage Rate - 15 Min";
         }
         if(isset($_GET["submit_1hr"]))
         {
           $time = 3600;
           $numPoints = 100;
-          $titleStr = "Network Usage Rate - 1 Hr";
+          $titleStr = "TX Usage Rate - 1 Hr";
         }
         if(isset($_GET["submit_4hr"]))
         {
           $time = 3600*4;
           $numPoints = 400;
-          $titleStr = "Network Usage Rate - 4 Hrs";
+          $titleStr = "TX Usage Rate - 4 Hrs";
         }
         if(isset($_GET["submit_12hr"]))
         {
           $time = 3600*12;
           $numPoints = 500;
-          $titleStr = "Network Usage Rate - 12 Hrs";
+          $titleStr = "TX Usage Rate - 12 Hrs";
         }
         if(isset($_GET["submit_1day"]))
         {
           $time = 3600*24;
           $numPoints = 600;
-          $titleStr = "Network Usage Rate - 1 Day";
+          $titleStr = "TX Usage Rate - 1 Day";
         }
         if(isset($_GET["submit_3day"]))
         {
           $time = 3600*24*3;
           $numPoints = 800;
-          $titleStr = "Network Usage Rate - 3 Days";
+          $titleStr = "TX Usage Rate - 3 Days";
         }
         if(isset($_GET["submit_7day"]))
         {
           $time = 3600*24*7;
           $numPoints = 2000;
-          $titleStr = "Network Usage Rate - 7 Days";
+          $titleStr = "TX Usage Rate - 7 Days";
         }
         if(isset($_GET["submit_30day"]))
         {
           $time = 3600*24*7;
           $numPoints = 2000;
-          $titleStr = "Network Usage Rate - 30 Days";
+          $titleStr = "TX Usage Rate - 30 Days";
         }
     ?>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -99,7 +99,7 @@
 
       function drawChart() {
         var data = google.visualization.arrayToDataTable([
-          [{type: 'datetime', label: 'Time'}, 'Network Usage Rate (Mbps)'],
+          [{type: 'datetime', label: 'Time'}, 'TX Usage Rate (Mbps)'],
           <?php echo shell_exec($pythonScript.$plotTypeCmd." -t ".$time." -n ".$numPoints);?>
         ]);
 
@@ -117,7 +117,7 @@
 
           vAxes: {
             // Adds titles to each axis.
-            0: {title: 'Network Usage Rate (Mbps)', textPosition: 'out'}
+            0: {title: 'TX Usage Rate (Mbps)', textPosition: 'out'}
           },
           backgroundColor: '<?php echo $DeviceColor;?>',
           width: chartW,
@@ -131,6 +131,11 @@
     </script>
   </head>
    <body>
+    <div class="navbar">
+        <a href="txUsageGraph.php">TX Usage</a>
+        <a href="txRateGraph.php">TX Rate</a>
+    </div>
+    <br><br>
     <center>
     <br>
     <form action="txRateGraph.php" method="get">
