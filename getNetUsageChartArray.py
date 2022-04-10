@@ -285,6 +285,8 @@ if __name__== "__main__":
    parser = argparse.ArgumentParser()
    parser.add_argument("-t", type=int, action="store", dest="chartTime", help="Chart Time", default=3600)
    parser.add_argument("-n", type=int, action="store", dest="numPoints", help="Num Points", default=100)
+   parser.add_argument("-u", action="store_true", dest="Usage")
+   parser.add_argument("-r", action="store_true", dest="Rate")
    args = parser.parse_args()
 
    # Process the Net Usage Log File
@@ -306,4 +308,7 @@ if __name__== "__main__":
 
       lines = getLinesToChart(lines, args.numPoints)
       
-      print(getPrintStr_rate(lines))
+      if args.Rate:
+         print(getPrintStr_rate(lines))
+      else:
+         print(getPrintStr_usage(lines))

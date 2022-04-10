@@ -15,11 +15,21 @@
         /////////////////////////////////////////////////////////
         // This code will run every time something happens.
         /////////////////////////////////////////////////////////        
-        $pythonScript = "python /home/pi/NetUsageWeb/getNetUsageChartArray.py";
+        $pythonScript = "python /home/pi/NetUsageWeb/getNetUsageChartArray.py"; // TODO this path to the python script shouldn't be hardcoded.
+        $plotTypeCmd = " -u"; // Default to a Network Useage plot
         $titleStr = "Network Usage - 1 Day";
 
         $time = 3600*24;
         $numPoints = 600;
+
+        if(isset($_GET["submit_graph_usage"]))
+        {
+          $plotTypeCmd = " -u";
+        }
+        if(isset($_GET["submit_graph_rate"]))
+        {
+          $plotTypeCmd = " -r";
+        }
 
         if(isset($_GET["submit_1min"]))
         {
@@ -99,7 +109,7 @@
       function drawChart() {
         var data = google.visualization.arrayToDataTable([
           [{type: 'datetime', label: 'Time'}, 'Network Usage (bytes)'],
-          <?php echo shell_exec($pythonScript." -t ".$time." -n ".$numPoints);?>
+          <?php echo shell_exec($pythonScript.$plotTypeCmd." -t ".$time." -n ".$numPoints);?>
         ]);
 
         var options = {
@@ -131,6 +141,11 @@
   </head>
    <body>
     <center>
+    <form action="graph.php" method="get">
+      <input name="submit_graph_usage" type="submit" value="Plot Usage Over Time" />
+      <input name="submit_graph_rate" type="submit" value="Plot Usage Rate" />
+    </form>
+    <br>
     <form action="graph.php" method="get">
       <input name="submit_1min" type="submit" value="1 Min" />
       <input name="submit_5min" type="submit" value="5 Min" />
