@@ -21,6 +21,24 @@
         $time = 3600*24;
         $numPoints = 600;
 
+        if(isset($_GET["submit_1min"]))
+        {
+          $time = 60;
+          $numPoints = 100;
+          $titleStr = "Network Usage - 1 Min";
+        }
+        if(isset($_GET["submit_5min"]))
+        {
+          $time = 5*60;
+          $numPoints = 100;
+          $titleStr = "Network Usage - 5 Min";
+        }
+        if(isset($_GET["submit_15min"]))
+        {
+          $time = 15*60;
+          $numPoints = 100;
+          $titleStr = "Network Usage - 15 Min";
+        }
         if(isset($_GET["submit_1hr"]))
         {
           $time = 3600;
@@ -119,6 +137,9 @@
    <body>
     <center>
     <form action="graph.php" method="get">
+      <input name="submit_1min" type="submit" value="1 Min" />
+      <input name="submit_5min" type="submit" value="5 Min" />
+      <input name="submit_15min" type="submit" value="15 Min" />
       <input name="submit_1hr" type="submit" value="1 Hr" />
       <input name="submit_4hr" type="submit" value="4 Hr" />
       <input name="submit_12hr" type="submit" value="12 Hr" />
