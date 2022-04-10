@@ -9,8 +9,8 @@
         /////////////////////////////////////////////////////////
         // This code will run every time something happens.
         /////////////////////////////////////////////////////////        
-        $pythonScript = "python /home/pi/NetUsageWeb/getNetUsageChartArray.py --tx"; // TODO this path to the python script shouldn't be hardcoded.
-        $plotTypeCmd = " -r";
+        $pythonScript = "python ".dirname(__FILE__)."/../getNetUsageChartArray.py";
+        $plotTypeCmd = " --tx -r";
         $titleStr = "TX Usage Rate - 1 Day";
 
         $time = 3600*24;
