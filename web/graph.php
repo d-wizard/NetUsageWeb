@@ -113,14 +113,9 @@
           },
           titleTextStyle: { fontSize: 20},
           legend: { position: 'bottom' },
-          // Gives each series an axis that matches the vAxes number below.
-          series: {
-            0: {targetAxisIndex: 1, color: '#F06846'},
-            1: {targetAxisIndex: 0, color: '#3366CC'}
-          },
+
           vAxes: {
             // Adds titles to each axis.
-            1: {ticks: [0,1], textPosition: 'none'},
             0: {title: 'Network Usage (bytes)', textPosition: 'out'}
           },
           backgroundColor: '<?php echo $DeviceColor;?>',
