@@ -1,0 +1,81 @@
+
+input[type='text'] { font-size: 16px; width: 120px; }
+input[type='number'] { font-size: 16px; text-align:center; width: 55px;}
+input[type='time'] { font-size: 16px; width: 110px; }
+input[type='submit'] { font-size: 16px; }
+select { font-size: 16px; }
+
+body {margin:0;}
+body {font-family: Arial, Helvetica, sans-serif;}
+h1 {font-size: 1.5em;}
+
+.devicebar {
+  overflow: hidden;
+  background-color: #000;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 17px;
+  color: #FFF
+}
+
+.devicebar td {
+  font-size: 17px;
+  color: #FFF
+}
+.devicebar td:nth-child(2) { padding-right:30px; white-space: nowrap; width: 1% }
+
+.navbar {
+  overflow: hidden;
+  background-color: #333;
+  position: fixed;
+  top: 47px;
+  width: 100%;
+}
+
+.navbar a {
+  float: left;
+  display: block;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: 17px;
+}
+
+.navbar a:hover {
+  background: #ddd;
+  color: black;
+}
+
+
+.settingsnavbar {
+  overflow: hidden;
+  background-color: #ddd;
+  position: fixed;
+  top: 94px;
+  width: 100%;
+}
+
+.settingsnavbar a {
+  float: left;
+  display: block;
+  color: black;
+  text-align: center;
+  padding: 14px 20px;
+  text-decoration: none;
+  font-size: 17px;
+}
+
+.settingsnavbar a:hover {
+  background: #333;
+  color: #f2f2f2;
+}
+
+.statusName {
+    font-size: 3.0em;
+}
+.statusVal {
+ font-size: 3.0em;
+}

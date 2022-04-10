@@ -185,7 +185,7 @@ def getPrintStr_usage(lines):
             startUsage = point.totalUsage
 
          # Don't have the .0 if the netUsage value is a whole number (i.e. save 2 bytes)
-         tempFlt = float(point.totalUsage - startUsage)
+         tempFlt = float(point.totalUsage - startUsage)/float(1024*1024*1024) # Retun in GiB
          tempInt = int(tempFlt)
          tempStr = str(tempInt) if tempInt == tempFlt else str(tempFlt)
 
@@ -202,12 +202,13 @@ def getPrintStr_rate(lines):
    retStr = ''
 
    lastTime = 0
+   lastData = 0
    for lineIndex in range(len(lines)):
       try:
          point = getNetUsagePoint(lines, lineIndex)
 
          # Don't have the .0 if the netUsage value is a whole number (i.e. save 2 bytes)
-         tempFlt = float(point.deltaUsage) / float(point.time - lastTime) / float(125000)
+         tempFlt = float(point.totalUsage - lastData) / float(point.time - lastTime) / float(125000)
          tempInt = int(tempFlt)
          tempStr = str(tempInt) if tempInt == tempFlt else str(tempFlt)
 
@@ -216,6 +217,7 @@ def getPrintStr_rate(lines):
             retStr += appendStr
 
          lastTime = point.time
+         lastData = point.totalUsage
       except:
          pass
    
