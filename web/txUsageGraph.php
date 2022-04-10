@@ -9,7 +9,7 @@
         /////////////////////////////////////////////////////////
         // This code will run every time something happens.
         /////////////////////////////////////////////////////////        
-        $pythonScript = "python /home/pi/NetUsageWeb/getNetUsageChartArray.py"; // TODO this path to the python script shouldn't be hardcoded.
+        $pythonScript = "python /home/pi/NetUsageWeb/getNetUsageChartArray.py --tx"; // TODO this path to the python script shouldn't be hardcoded.
         $plotTypeCmd = " -u";
         $titleStr = "TX Usage Sum - 1 Day";
 

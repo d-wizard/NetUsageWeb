@@ -23,11 +23,12 @@ TIME_BETWEEN_LOG_UPDATES = 30
 
 class NetStatTimePoint(object):
    def __init__(self):
-      # Time (sec), Raw Usage Value (bytes), Usage Delta (bytes), Total Usage Since Beginning Of Time (bytes)
+      # Time (sec), Raw Usage Value (bytes), Total Usage Since Beginning Of Time (bytes)
       self.time = None 
-      self.rawUsage = None
-      self.deltaUsage = None
-      self.totalUsage = None
+      self.rawUsage_tx = None
+      self.rawUsage_rx = None
+      self.totalUsage_tx = None
+      self.totalUsage_rx = None
 
 
 ################################################################################
@@ -117,10 +118,11 @@ def getNetUsagePoint(logLines, lineNum):
    retVal = NetStatTimePoint()
    try:
       splitLine = logLines[lineNum].split(',')
-      retVal.time       = int(splitLine[0])
-      retVal.rawUsage   = int(splitLine[1])
-      retVal.deltaUsage = int(splitLine[2])
-      retVal.totalUsage = int(splitLine[3])
+      retVal.time          = int(splitLine[0])
+      retVal.rawUsage_tx   = int(splitLine[1])
+      retVal.rawUsage_rx   = int(splitLine[2])
+      retVal.totalUsage_tx = int(splitLine[3])
+      retVal.totalUsage_rx = int(splitLine[4])
    except:
       print("getNetUsagePoint - Failed to parse line: " + str(lineNum))
       return None
@@ -174,18 +176,19 @@ def getLinesToChart(lines, numLinesToChart):
 
    return retVal
 
-def getPrintStr_usage(lines):
+def getPrintStr_usage(lines, isTx):
    retStr = ''
 
    startUsage = 0
    for lineIndex in range(len(lines)):
       try:
          point = getNetUsagePoint(lines, lineIndex)
+         totalUsage = point.totalUsage_tx if isTx else point.totalUsage_rx
          if lineIndex == 0: # set startUsage on first point
-            startUsage = point.totalUsage
+            startUsage = totalUsage
 
          # Don't have the .0 if the netUsage value is a whole number (i.e. save 2 bytes)
-         tempFlt = float(point.totalUsage - startUsage)/float(1024*1024*1024) # Retun in GiB
+         tempFlt = float(totalUsage - startUsage)/float(1024*1024*1024) # Retun in GiB
          tempInt = int(tempFlt)
          tempStr = str(tempInt) if tempInt == tempFlt else str(tempFlt)
 
@@ -194,11 +197,11 @@ def getPrintStr_usage(lines):
       except:
          pass
    
-   if retStr[-1] == ',':
+   if len(retStr) > 0 and retStr[-1] == ',':
        retStr = retStr[:-1]
    return retStr
 
-def getPrintStr_rate(lines):
+def getPrintStr_rate(lines, isTx):
    retStr = ''
 
    lastTime = 0
@@ -206,9 +209,10 @@ def getPrintStr_rate(lines):
    for lineIndex in range(len(lines)):
       try:
          point = getNetUsagePoint(lines, lineIndex)
+         totalUsage = point.totalUsage_tx if isTx else point.totalUsage_rx
 
          # Don't have the .0 if the netUsage value is a whole number (i.e. save 2 bytes)
-         tempFlt = float(point.totalUsage - lastData) / float(point.time - lastTime) / float(125000)
+         tempFlt = float(totalUsage - lastData) / float(point.time - lastTime) / float(125000)
          tempInt = int(tempFlt)
          tempStr = str(tempInt) if tempInt == tempFlt else str(tempFlt)
 
@@ -217,38 +221,46 @@ def getPrintStr_rate(lines):
             retStr += appendStr
 
          lastTime = point.time
-         lastData = point.totalUsage
+         lastData = totalUsage
       except:
          pass
    
-   if retStr[-1] == ',':
+   if len(retStr) > 0 and retStr[-1] == ',':
        retStr = retStr[:-1]
    return retStr
 
-def updateNetUsageLogFile(netUsage):
+def updateNetUsageLogFile(netUsage_tx, netUsage_rx):
    nowUnixTime = getNowTimeUnix()
 
    lockFd = lockFile(NET_USAGE_LOCK_PATH)
 
    newUsagePoint = NetStatTimePoint()
    newUsagePoint.time = nowUnixTime
-   newUsagePoint.rawUsage = netUsage
+   newUsagePoint.rawUsage_tx = netUsage_tx
+   newUsagePoint.rawUsage_rx = netUsage_rx
 
    logLines = readWholeFile_lines(NET_USAGE_LOG_PATH)
 
    lastUsagePoint = getNetUsagePoint(logLines, -1)
    if lastUsagePoint != None:
-      newUsagePoint.deltaUsage = newUsagePoint.rawUsage - lastUsagePoint.rawUsage
-      if newUsagePoint.deltaUsage < 0:
-         newUsagePoint.deltaUsage = newUsagePoint.rawUsage # The router must have reset its count. Some usage info will have been lost. 
-      newUsagePoint.totalUsage = lastUsagePoint.totalUsage + newUsagePoint.deltaUsage
+      # TX
+      deltaUsage_tx = newUsagePoint.rawUsage_tx - lastUsagePoint.rawUsage_tx
+      if deltaUsage_tx < 0:
+         deltaUsage_tx = newUsagePoint.rawUsage_tx # The router must have reset its count. Some usage info will have been lost. 
+      newUsagePoint.totalUsage_tx = lastUsagePoint.totalUsage_tx + deltaUsage_tx
+
+      # RX
+      deltaUsage_rx = newUsagePoint.rawUsage_rx - lastUsagePoint.rawUsage_rx
+      if deltaUsage_rx < 0:
+         deltaUsage_rx = newUsagePoint.rawUsage_rx # The router must have reset its count. Some usage info will have been lost. 
+      newUsagePoint.totalUsage_rx = lastUsagePoint.totalUsage_rx + deltaUsage_rx
    else:
       # Start the log file
-      newUsagePoint.deltaUsage = 0
-      newUsagePoint.totalUsage = newUsagePoint.deltaUsage
+      newUsagePoint.totalUsage_tx = 0
+      newUsagePoint.totalUsage_rx = 0
 
    # Log message format will be Time (sec), Raw Usage Value (bytes), Usage Delta (bytes), Total Usage Since Beginning Of Time (bytes)
-   logPrint = str(newUsagePoint.time) + "," + str(newUsagePoint.rawUsage) + "," + str(newUsagePoint.deltaUsage) + "," + str(newUsagePoint.totalUsage) + LOG_NEW_LINE
+   logPrint = str(newUsagePoint.time) + "," + str(newUsagePoint.rawUsage_tx) + "," + str(newUsagePoint.rawUsage_rx) + "," + str(newUsagePoint.totalUsage_tx) + "," + str(newUsagePoint.totalUsage_rx) + LOG_NEW_LINE
    appendFile(NET_USAGE_LOG_PATH, logPrint)
 
    # Limit the log from getting too big
@@ -265,21 +277,53 @@ def updateNetUsageLogFile(netUsage):
 
    unlockFile(lockFd)
 
+NetUsageCmd = None
+NetUsageStartKeyWord_TX = None
+NetUsageStartKeyWord_RX = None
+NetUsageEndKeyWord_TX = None
+NetUsageEndKeyWord_RX = None
+
+def fillInNetUsageFromJson():
+   global NetUsageCmd
+   global NetUsageStartKeyWord_TX
+   global NetUsageStartKeyWord_RX
+   global NetUsageEndKeyWord_TX
+   global NetUsageEndKeyWord_RX
+   if NetUsageCmd == None:
+      THIS_FILE_JSON = json.loads(readWholeFile(JSON_PATH))
+      NetUsageCmd = THIS_FILE_JSON["NetUsageCmd"]
+      NetUsageStartKeyWord_TX = THIS_FILE_JSON["NetUsageStartKeyWord_TX"]
+      NetUsageStartKeyWord_RX = THIS_FILE_JSON["NetUsageStartKeyWord_RX"]
+      NetUsageEndKeyWord_TX = THIS_FILE_JSON["NetUsageEndKeyWord_TX"]
+      NetUsageEndKeyWord_RX = THIS_FILE_JSON["NetUsageEndKeyWord_RX"]
+
+
 def getNetUsage():
    # Read the JSON contents of this file every time it is used.
+   txUsage = None
+   rxUsage = None
    try:
-      THIS_FILE_JSON = json.loads(readWholeFile(JSON_PATH))
+      global NetUsageCmd
+      global NetUsageStartKeyWord_TX
+      global NetUsageStartKeyWord_RX
+      global NetUsageEndKeyWord_TX
+      global NetUsageEndKeyWord_RX
+      fillInNetUsageFromJson()
 
-      cmd = THIS_FILE_JSON["NetUsageCmd"]
-      cmdResults = runProcess(cmd)
+      cmdResults = runProcess(NetUsageCmd)
 
       for line in cmdResults:
-         if THIS_FILE_JSON["NetUsageStartKeyWord"] in line:
-            subStr = line.split(THIS_FILE_JSON["NetUsageStartKeyWord"])[1].split(THIS_FILE_JSON["NetUsageEndKeyWord"])[0]
-            return int(subStr)
+         if NetUsageStartKeyWord_TX in line:
+            subStr = line.split(NetUsageStartKeyWord_TX)[1].split(NetUsageEndKeyWord_TX)[0]
+            txUsage = int(subStr)
+         if NetUsageStartKeyWord_RX in line:
+            subStr = line.split(NetUsageStartKeyWord_RX)[1].split(NetUsageEndKeyWord_RX)[0]
+            rxUsage = int(subStr)
+         if txUsage != None and rxUsage != None:
+            return txUsage, rxUsage
    except:
       pass
-   return None
+   return None, None
 
 # Main start
 if __name__== "__main__":
@@ -289,6 +333,8 @@ if __name__== "__main__":
    parser.add_argument("-n", type=int, action="store", dest="numPoints", help="Num Points", default=100)
    parser.add_argument("-u", action="store_true", dest="Usage")
    parser.add_argument("-r", action="store_true", dest="Rate")
+   parser.add_argument("--rx", action="store_true", dest="RX")
+   parser.add_argument("--tx", action="store_true", dest="TX")
    args = parser.parse_args()
 
    # Process the Net Usage Log File
@@ -311,6 +357,6 @@ if __name__== "__main__":
       lines = getLinesToChart(lines, args.numPoints)
       
       if args.Rate:
-         print(getPrintStr_rate(lines))
+         print(getPrintStr_rate(lines, args.TX))
       else:
-         print(getPrintStr_usage(lines))
+         print(getPrintStr_usage(lines, args.TX))
