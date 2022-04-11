@@ -3,15 +3,15 @@
   <head>
     <link rel="stylesheet" type="text/css" href="netUsage.css">
     <meta name="viewport" content="width=device-width" />
-    <title>TX Usage Rate</title>
+    <title>RX Usage Sum</title>
     
     <?php
         /////////////////////////////////////////////////////////
         // This code will run every time something happens.
         /////////////////////////////////////////////////////////        
         $pythonScript = "python ".dirname(__FILE__)."/../getNetUsageChartArray.py";
-        $plotTypeCmd = " --tx -r";
-        $titleStr = "TX Usage Rate - 1 Day";
+        $plotTypeCmd = " --rx -u";
+        $titleStr = "RX Usage Sum - 1 Day";
 
         $time = 3600*24;
         $numPoints = 600;
@@ -20,61 +20,61 @@
         {
           $time = 60;
           $numPoints = 100;
-          $titleStr = "TX Usage Rate - 1 Min";
+          $titleStr = "RX Usage Sum - 1 Min";
         }
         if(isset($_GET["submit_5min"]))
         {
           $time = 5*60;
           $numPoints = 100;
-          $titleStr = "TX Usage Rate - 5 Min";
+          $titleStr = "RX Usage Sum - 5 Min";
         }
         if(isset($_GET["submit_15min"]))
         {
           $time = 15*60;
           $numPoints = 100;
-          $titleStr = "TX Usage Rate - 15 Min";
+          $titleStr = "RX Usage Sum - 15 Min";
         }
         if(isset($_GET["submit_1hr"]))
         {
           $time = 3600;
           $numPoints = 100;
-          $titleStr = "TX Usage Rate - 1 Hr";
+          $titleStr = "RX Usage Sum - 1 Hr";
         }
         if(isset($_GET["submit_4hr"]))
         {
           $time = 3600*4;
           $numPoints = 400;
-          $titleStr = "TX Usage Rate - 4 Hrs";
+          $titleStr = "RX Usage Sum - 4 Hrs";
         }
         if(isset($_GET["submit_12hr"]))
         {
           $time = 3600*12;
           $numPoints = 500;
-          $titleStr = "TX Usage Rate - 12 Hrs";
+          $titleStr = "RX Usage Sum - 12 Hrs";
         }
         if(isset($_GET["submit_1day"]))
         {
           $time = 3600*24;
           $numPoints = 600;
-          $titleStr = "TX Usage Rate - 1 Day";
+          $titleStr = "RX Usage Sum - 1 Day";
         }
         if(isset($_GET["submit_3day"]))
         {
           $time = 3600*24*3;
           $numPoints = 800;
-          $titleStr = "TX Usage Rate - 3 Days";
+          $titleStr = "RX Usage Sum - 3 Days";
         }
         if(isset($_GET["submit_7day"]))
         {
           $time = 3600*24*7;
           $numPoints = 2000;
-          $titleStr = "TX Usage Rate - 7 Days";
+          $titleStr = "RX Usage Sum - 7 Days";
         }
         if(isset($_GET["submit_30day"]))
         {
           $time = 3600*24*7;
           $numPoints = 2000;
-          $titleStr = "TX Usage Rate - 30 Days";
+          $titleStr = "RX Usage Sum - 30 Days";
         }
     ?>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -99,7 +99,7 @@
 
       function drawChart() {
         var data = google.visualization.arrayToDataTable([
-          [{type: 'datetime', label: 'Time'}, 'TX Usage Rate (Mbps)'],
+          [{type: 'datetime', label: 'Time'}, 'RX Usage Sum (GiB)'],
           <?php echo shell_exec($pythonScript.$plotTypeCmd." -t ".$time." -n ".$numPoints);?>
         ]);
 
@@ -117,7 +117,7 @@
 
           vAxes: {
             // Adds titles to each axis.
-            0: {title: 'TX Usage Rate (Mbps)', textPosition: 'out'}
+            0: {title: 'RX Usage Sum (GiB)', textPosition: 'out'}
           },
           backgroundColor: '<?php echo $DeviceColor;?>',
           width: chartW,
@@ -140,7 +140,7 @@
     <br><br>
     <center>
     <br>
-    <form action="txRateGraph.php" method="get">
+    <form action="rxUsageGraph.php" method="get">
       <input name="submit_1min" type="submit" value="1 Min" size="50"/>
       <input name="submit_5min" type="submit" value="5 Min" />
       <input name="submit_1hr" type="submit" value="1 Hr" />

@@ -3,7 +3,7 @@
   <head>
     <link rel="stylesheet" type="text/css" href="netUsage.css">
     <meta name="viewport" content="width=device-width" />
-    <title>Net Usage Sum</title>
+    <title>TX Usage Sum</title>
     
     <?php
         /////////////////////////////////////////////////////////
@@ -133,7 +133,9 @@
    <body>
     <div class="navbar">
         <a href="txUsageGraph.php">TX Usage</a>
+        <a href="rxUsageGraph.php">RX Usage</a>
         <a href="txRateGraph.php">TX Rate</a>
+        <a href="rxRateGraph.php">RX Rate</a>
     </div>
     <br><br>
     <center>
