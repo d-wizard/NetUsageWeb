@@ -11,10 +11,11 @@
         /////////////////////////////////////////////////////////        
         $pythonScript = "python ".dirname(__FILE__)."/../getNetUsageChartArray.py";
         $plotTypeCmd = " --rx -u";
-        $titleStr = "RX Usage Sum - 1 Day";
 
-        $time = 3600*24;
-        $numPoints = 600;
+        // Default to 30 day view
+        $time = 3600*24*7;
+        $numPoints = 2000;
+        $titleStr = "RX Usage Sum - 30 Days";
 
         if(isset($_GET["submit_1min"]))
         {
