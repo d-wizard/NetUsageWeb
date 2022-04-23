@@ -190,7 +190,7 @@ def getPrintStr_usage(lines, isTx):
          # Don't have the .0 if the netUsage value is a whole number (i.e. save 2 bytes)
          tempFlt = float(totalUsage - startUsage)/float(1024*1024*1024) # Retun in GiB
          tempInt = int(tempFlt)
-         tempStr = str(tempInt) if tempInt == tempFlt else str(tempFlt)
+         tempStr = str(tempInt) if tempInt == tempFlt else "{:.2f}".format(tempFlt)
 
          appendStr = '["Date(' + timeToPrintStr(point.time) + ')",' + tempStr + '],'
          retStr += appendStr
@@ -214,7 +214,7 @@ def getPrintStr_rate(lines, isTx):
          # Don't have the .0 if the netUsage value is a whole number (i.e. save 2 bytes)
          tempFlt = float(totalUsage - lastData) / float(point.time - lastTime) / float(125000)
          tempInt = int(tempFlt)
-         tempStr = str(tempInt) if tempInt == tempFlt else str(tempFlt)
+         tempStr = str(tempInt) if tempInt == tempFlt else "{:.2f}".format(tempFlt)
 
          if lineIndex != 0:
             appendStr = '["Date(' + timeToPrintStr(point.time) + ')",' + tempStr + '],'
