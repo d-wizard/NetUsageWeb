@@ -72,7 +72,7 @@
         }
         if(isset($_GET["submit_30day"]))
         {
-          $time = 3600*24*7;
+          $time = 3600*24*30;
           $numPoints = 2000;
           $titleStr = "TX Usage Rate - 30 Days";
         }

@@ -13,7 +13,7 @@
         $plotTypeCmd = " --tx -u";
 
         // Default to 30 day view
-        $time = 3600*24*7;
+        $time = 3600*24*30;
         $numPoints = 2000;
         $titleStr = "TX Usage Sum - 30 Days";
 
@@ -73,7 +73,7 @@
         }
         if(isset($_GET["submit_30day"]))
         {
-          $time = 3600*24*7;
+          $time = 3600*24*30;
           $numPoints = 2000;
           $titleStr = "TX Usage Sum - 30 Days";
         }
