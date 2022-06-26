@@ -180,12 +180,25 @@ def getPrintStr_usage(lines, isTx):
    retStr = ''
 
    startUsage = 0
+   totalUsage = 0
+   prevTotalUsage = 0
+   prevRawUsage = 0
    for lineIndex in range(len(lines)):
       try:
          point = getNetUsagePoint(lines, lineIndex)
-         totalUsage = point.totalUsage_tx if isTx else point.totalUsage_rx
+         rawTotalUsage = point.totalUsage_tx if isTx else point.totalUsage_rx
          if lineIndex == 0: # set startUsage on first point
-            startUsage = totalUsage
+            startUsage = rawTotalUsage
+
+         # I've seen some bugs in the log file where total usage gets reset.
+         if prevTotalUsage > rawTotalUsage:
+            delta = rawTotalUsage - prevRawUsage
+            if delta > 0:
+               totalUsage = totalUsage + delta
+         else:
+            totalUsage = rawTotalUsage
+         prevRawUsage = rawTotalUsage
+         prevTotalUsage = totalUsage
 
          # Don't have the .0 if the netUsage value is a whole number (i.e. save 2 bytes)
          tempFlt = float(totalUsage - startUsage)/float(1024*1024*1024) # Retun in GiB
@@ -206,10 +219,23 @@ def getPrintStr_rate(lines, isTx):
 
    lastTime = 0
    lastData = 0
+   totalUsage = 0
+   prevTotalUsage = 0
+   prevRawUsage = 0
    for lineIndex in range(len(lines)):
       try:
          point = getNetUsagePoint(lines, lineIndex)
-         totalUsage = point.totalUsage_tx if isTx else point.totalUsage_rx
+         rawTotalUsage = point.totalUsage_tx if isTx else point.totalUsage_rx
+
+         # I've seen some bugs in the log file where total usage gets reset.
+         if prevTotalUsage > rawTotalUsage:
+            delta = rawTotalUsage - prevRawUsage
+            if delta > 0:
+               totalUsage = totalUsage + delta
+         else:
+            totalUsage = rawTotalUsage
+         prevRawUsage = rawTotalUsage
+         prevTotalUsage = totalUsage
 
          # Don't have the .0 if the netUsage value is a whole number (i.e. save 2 bytes)
          tempFlt = float(totalUsage - lastData) / float(point.time - lastTime) / float(125000)
