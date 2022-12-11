@@ -339,6 +339,7 @@ def getNetUsage():
       cmdResults = runProcess(NetUsageCmd)
 
       for line in cmdResults:
+         line = str(line)
          if NetUsageStartKeyWord_TX in line:
             subStr = line.split(NetUsageStartKeyWord_TX)[1].split(NetUsageEndKeyWord_TX)[0]
             txUsage = int(subStr)
