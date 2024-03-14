@@ -75,9 +75,9 @@ def lockFile(fileToLock):
 def unlockFile(fd):
    fcntl.lockf(fd, fcntl.LOCK_UN )
 
-def runProcess(exe):
+def runProcess(popenCmdList):
    retVal = []  
-   p = subprocess.Popen(exe.split(' '), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+   p = subprocess.Popen(popenCmdList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
    while(True):
       retcode = p.poll() #returns None while subprocess is running
       line = p.stdout.readline()
@@ -317,7 +317,7 @@ def fillInNetUsageFromJson():
    global NetUsageEndKeyWord_RX
    if NetUsageCmd == None:
       THIS_FILE_JSON = json.loads(readWholeFile(JSON_PATH))
-      NetUsageCmd = THIS_FILE_JSON["NetUsageCmd"]
+      NetUsageCmd = THIS_FILE_JSON["NetUsageCmdPopenList"]
       NetUsageStartKeyWord_TX = THIS_FILE_JSON["NetUsageStartKeyWord_TX"]
       NetUsageStartKeyWord_RX = THIS_FILE_JSON["NetUsageStartKeyWord_RX"]
       NetUsageEndKeyWord_TX = THIS_FILE_JSON["NetUsageEndKeyWord_TX"]
